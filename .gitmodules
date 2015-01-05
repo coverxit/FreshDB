@@ -1,0 +1,3 @@
+[submodule "FreshCask"]
+	path = FreshCask
+	url = https://github.com/coverxit/FreshCask

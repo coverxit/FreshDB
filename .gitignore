@@ -26,3 +26,9 @@
 *.exe
 *.out
 *.app
+*.log
+
+# Visual Studio
+*.vcxproj.user
+Debug
+ReadMe.txt
