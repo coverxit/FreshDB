@@ -578,7 +578,7 @@ private:
 								}
 							}
 						}
-						catch (Exception^ e)
+						catch (Exception^)
 						{
 							servResponse = "0syntax: .login [username] [password]";
 							goto sendResponse;
