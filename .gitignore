@@ -31,4 +31,5 @@
 # Visual Studio
 *.vcxproj.user
 Debug
+Release
 ReadMe.txt

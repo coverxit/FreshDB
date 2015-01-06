@@ -591,6 +591,12 @@ private:
 							goto sendResponse;
 						}
 
+						if (cmd == "version")
+						{
+							servResponse = "1" + Assembly::GetExecutingAssembly()->GetName()->Version;
+							goto sendResponse;
+						}
+
 						List<System::String^>^ param = gcnew List < System::String^ > ;
 						TaskLoop::RetType ret = loop->Parse(cmd, param);
 
