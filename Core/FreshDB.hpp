@@ -568,8 +568,7 @@ private:
 									servResponse = "0" + helper->toManaged(s.ToString());
 								else
 								{
-									MD5Helper^ md5 = gcnew MD5Helper;
-									if (md5->Get(password) == helper->toManaged(value.ToString()))
+									if (password == helper->toManaged(value.ToString()))
 									{
 										logged = true;
 										servResponse = "1login successfully, " + username + ".";
