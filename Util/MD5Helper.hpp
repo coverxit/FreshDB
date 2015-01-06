@@ -16,7 +16,7 @@ public:
 		StringBuilder^ sb = gcnew StringBuilder;
 		for each (Byte b in hash)
 			sb->Append(b.ToString("x2"));
-
+		
 		return sb->ToString();
 	}
 };
