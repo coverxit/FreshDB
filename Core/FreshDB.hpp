@@ -137,6 +137,7 @@ public:
 				}
 
 				netTask = gcnew Task(gcnew Action<System::Object^>(this, &FreshDB::RemoteLoop), TaskCreationOptions::LongRunning | TaskCreationOptions::PreferFairness);
+				netTask->Start();
 				LocalLoop();
 
 				Log("Quitting... ");
@@ -496,9 +497,9 @@ private:
 
 			serSock->Start();
 			if (listenInterface != IPAddress::Any)
-				Log("server started at " + listenInterface->Address.ToString() + " on " + listenPort.ToString() + ".");
+				Log("server started at " + listenInterface->Address.ToString() + " on " + listenPort.ToString() + ".", "Remote");
 			else
-				Log("server listened on " + listenPort.ToString() + ".");
+				Log("server listened on " + listenPort.ToString() + ".", "Remote");
 
 			while (true)
 			{
@@ -517,7 +518,7 @@ private:
 		TcpClient^ cliSock = (TcpClient^)param;
 
 		IPEndPoint^ ip = (IPEndPoint^)cliSock->Client->RemoteEndPoint;
-		Log("incoming connection from " + ip->Address->ToString());
+		Log("incoming connection from " + ip->Address->ToString(), "Remote");
 
 		ASCIIEncoding^ encoder = gcnew ASCIIEncoding();
 
@@ -581,7 +582,6 @@ private:
 						catch (Exception^)
 						{
 							servResponse = "0syntax: .login [username] [password]";
-							goto sendResponse;
 						}
 					}
 					else
