@@ -687,7 +687,7 @@ private:
 			}
 			catch (Exception^ e)
 			{
-				Log(e->Message + Environment::NewLine + e->StackTrace, "Error");
+				Log(e->Message + Environment::NewLine + e->StackTrace, "Error", true);
 			}
 		}
 	}
