@@ -520,7 +520,7 @@ private:
 		IPEndPoint^ ip = (IPEndPoint^)cliSock->Client->RemoteEndPoint;
 		Log("incoming connection from " + ip->Address->ToString(), "Remote");
 
-		ASCIIEncoding^ encoder = gcnew ASCIIEncoding();
+		UnicodeEncoding^ encoder = gcnew UnicodeEncoding();
 
 		TaskLoop^ loop = gcnew TaskLoop(bcDict, databasePath);
 		MarshalHelper^ helper = gcnew MarshalHelper;
@@ -530,26 +530,35 @@ private:
 		{
 			try
 			{
-				NetworkStream^ stream = cliSock->GetStream();
-			
+				NetworkStream^ stream;
+				try
+				{
+					stream = cliSock->GetStream();
+				}
+				catch (Exception^)
+				{
+					return;
+				}
+
 				array<Byte>^ buffer = gcnew array<Byte>(bufferSize);
 				int bytesReaded = stream->Read(buffer, 0, buffer->Length);
-				
+
 				System::String^ data = encoder->GetString(buffer, 0, bytesReaded);
-				array<System::String^>^ cmds = data->Split(Environment::NewLine->ToCharArray());
+				System::String^ delim = "\0";
+				array<System::String^>^ cmds = data->Split(delim->ToCharArray());
 
 				System::String^ servResponse = System::String::Empty;
 
 				for each (System::String^% cmd in cmds)
 				{
-					if (cmd->StartsWith("login"))
+					if (cmd->StartsWith(".login"))
 					{
 						array<Char>^ delim = { ' ' };
 						array<String^>^ param = cmd->Split(delim);
 
 						if (param->Length == 1)
 						{
-							servResponse = "0syntax: .login [username] [password]";
+							servResponse = "0Syntax: .login [username] [password]";
 							goto sendResponse;
 						}
 
@@ -559,7 +568,7 @@ private:
 							System::String ^password = param[2];
 
 							if (!adminBC->CotainsKey(helper->toUnmanaged(username)))
-								servResponse = "0wrong password or username doesn't exist.";
+								servResponse = "0Wrong password or username doesn't exist.";
 							else
 							{
 								FreshCask::SmartByteArray value;
@@ -571,23 +580,23 @@ private:
 									if (password == helper->toManaged(value.ToString()))
 									{
 										logged = true;
-										servResponse = "1login successfully, " + username + ".";
+										servResponse = "1Login successfully, " + username + ".";
 									}
 									else
-										servResponse = "0wrong password or username doesn't exist.";
+										servResponse = "0Wrong password or username doesn't exist.";
 								}
 							}
 						}
 						catch (Exception^)
 						{
-							servResponse = "0syntax: .login [username] [password]";
+							servResponse = "0Syntax: .login [username] [password]";
 						}
 					}
 					else
 					{
 						if (!logged)
 						{
-							servResponse = "0you haven't logged in.";
+							servResponse = "0You haven't logged in.";
 							goto sendResponse;
 						}
 
@@ -624,7 +633,7 @@ private:
 											break;
 										}
 										else
-											servResponse += key + ":" + helper->toManaged(value.ToString()) + Environment::NewLine;
+											servResponse += key + "\0" + helper->toManaged(value.ToString()) + "\x1";
 									}
 								}
 							}
@@ -636,7 +645,7 @@ private:
 								if (param->Count > 0) // has buckets
 								{
 									for each (System::String^% bucket in param)
-										servResponse += bucket + Environment::NewLine;
+										servResponse += bucket + "\0";
 								}
 							}
 							else if (param[0] == "proc end")
@@ -647,19 +656,21 @@ private:
 									bool success = true;
 									for each (System::String^% st in param)
 									{
-										List<System::String^>^ tmp = gcnew List<System::String^>;
+										List<System::String^>^ tmp = gcnew List < System::String^ > ;
 										TaskLoop::RetType ret = loop->Parse(st, tmp);
 										if (!TaskLoop::IsOK(ret))
 										{
-											servResponse = "when executing statement: `" + st->Trim() + "`" + Environment::NewLine;
-											servResponse += TaskLoop::ToString(ret);
+											servResponse = "0When executing statement: `" + st->Trim() + "`, an error occured: " + Environment::NewLine;
+											servResponse += "   " + TaskLoop::ToString(ret);
 											success = false; break;
 										}
 									}
 
 									if (success)
-										servResponse = "2procedure execution finished successfully.";
+										servResponse = "1Procedure execution finished successfully.";
 								}
+								else
+									servResponse = "1No executions need to be done.";
 							}
 							else if (param[0] == "get")
 								servResponse = "1" + param[1]; // param[1] - value
@@ -668,15 +679,15 @@ private:
 						}
 					}
 				}
-				
-sendResponse:
+
+			sendResponse:
 				array<Byte>^ sendBytes = encoder->GetBytes(servResponse);
 				stream->Write(sendBytes, 0, sendBytes->Length);
 				stream->Flush();
 			}
 			catch (Exception^ e)
 			{
-				Log(e->Message + Environment::NewLine + e->StackTrace);
+				Log(e->Message + Environment::NewLine + e->StackTrace, "Error");
 			}
 		}
 	}
