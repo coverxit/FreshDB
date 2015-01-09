@@ -518,7 +518,7 @@ private:
 		TcpClient^ cliSock = (TcpClient^)param;
 
 		IPEndPoint^ ip = (IPEndPoint^)cliSock->Client->RemoteEndPoint;
-		Log("incoming connection from " + ip->Address->ToString(), "Remote");
+		Log("incoming connection from " + ip->Address->ToString(), "Remote", true);
 
 		UnicodeEncoding^ encoder = gcnew UnicodeEncoding();
 
